@@ -20,7 +20,9 @@ int main() {
     std::cout << "Game window initialized successfully!" << std::endl;
 
     Game game{};
-    game.init_player(50, 100, BLUE, 100);
+    game.init_player(50, 100, BLUE, 500);
+    game.player.position = Vector2{80, 60};
+    game.player.previous_position = Vector2{80, 60};
 
     // Main game loop
 

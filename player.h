@@ -3,18 +3,29 @@
 
 class Player {
     public:
-        float width{};
-        float height{};
+        float hitbox_width{};
+        float hitbox_height{};
         Color color{};
         Vector2 position{};
         Vector2 previous_position{};        // For frame interpolation
         int movement_speed{};
         Vector2 velocity{};
         bool is_touching_ground{};      // To prevent the physics from updaing and clipping out the player from the ground
+        Texture2D player_spritesheet_run{};
+        Texture2D player_spritesheet_jump{};
+        int facing_direction{ 1 };     // 1 is right, -1 is left
 
-        Player(float width, float height, Color color, int movement_speed);
+        Player(float hitbox_width, float hitbox_height, Color color, int movement_speed);
+        // ~Player();
         Player() = default;
+        void jump(float intensity);
         void update_physics(float dt);
         void draw(float alpha);
+
+    private:
+        float cell_width{};
+        float cell_height{};
+        int current_animation_frame{};
+        float animation_timer{};
 
 };

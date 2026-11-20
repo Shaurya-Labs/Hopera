@@ -7,8 +7,11 @@
 class Game {
     public:
         Player player{};
+        Camera2D camera{};
         
+        Game(bool debug);
         void init_player(float width, float height, Color color, int movement_speed);
+        void init_camera(Vector2 offset, Vector2 player_initial_position, float rotation, float zoom);
         void get_input();
         void update(float dt);
         void draw(float alpha);

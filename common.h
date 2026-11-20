@@ -1,6 +1,8 @@
 #pragma once
 #include <raylib.h>
 
+inline bool debug_mode{ false };
+
 inline constexpr float ACCELERATION_DUE_TO_GRAVITY { 400.0f };
 
 struct Wall {

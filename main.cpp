@@ -19,10 +19,12 @@ int main() {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game");
     std::cout << "Game window initialized successfully!" << std::endl;
 
-    Game game{};
-    game.init_player(50, 100, BLUE, 500);
+    Game game{true};
+    game.init_player(45, 70, BLUE, 500);
     game.player.position = Vector2{80, 60};
     game.player.previous_position = Vector2{80, 60};
+
+    game.init_camera(Vector2{GetScreenWidth()/2.0f, GetScreenHeight()/2.0f}, Vector2{80, 60}, 0.0f, 1.0f);
 
     // Main game loop
 

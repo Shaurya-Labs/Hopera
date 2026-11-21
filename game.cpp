@@ -89,6 +89,25 @@ void Game::check_and_resolve_collisions() {
 }
 
 void Game::update(float dt) {
+
+    // For the initial start screen
+    if (game_state == GameState::START_SCREEN) {
+            int screen_width = GetScreenWidth();
+            int screen_height = GetScreenHeight();
+
+            Rectangle start_btn {
+                static_cast<float>(screen_width) / 2.0f - 110.0f,
+                static_cast<float>(screen_height) / 2.0f + 50.0f,
+                220.0f,
+                56.0f
+            };
+
+            Vector2 mouse_pos = GetMousePosition();
+            if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, start_btn)) {
+                game_state = GameState::PLAYING;
+            }
+        }
+
     player.update_physics(dt);
     check_and_resolve_collisions();
 
@@ -100,6 +119,50 @@ void Game::update(float dt) {
 }
 
 void Game::draw(float alpha) {
+
+    // For initial start screen
+    if (game_state == GameState::START_SCREEN) {
+        int screen_width = GetScreenWidth();
+        int screen_height = GetScreenHeight();
+
+        const char* title = "HOPERA";
+        const char* prompt = "Help the old man retrieve his bag from the end of the map";
+        const char* btn_label = "START";
+
+        int title_size = 48;
+        int prompt_size = 24;
+        int btn_text_size = 26;
+
+        int title_width = MeasureText(title, title_size);
+        int prompt_width = MeasureText(prompt, prompt_size);
+        int btn_text_width = MeasureText(btn_label, btn_text_size);
+
+        Rectangle start_btn {
+            static_cast<float>(screen_width) / 2.0f - 110.0f,
+            static_cast<float>(screen_height) / 2.0f + 50.0f,
+            220.0f,
+            56.0f
+        };
+
+        bool hovered = CheckCollisionPointRec(GetMousePosition(), start_btn);
+
+        DrawText(title, (screen_width - title_width) / 2, screen_height / 2 - 120, title_size, RAYWHITE);
+        DrawText(prompt, (screen_width - prompt_width) / 2, screen_height / 2 - 40, prompt_size, LIGHTGRAY);
+
+        DrawRectangleRec(start_btn, hovered ? SKYBLUE : DARKBLUE);
+        DrawRectangleLinesEx(start_btn, 2.0f, RAYWHITE);
+        DrawText(
+            btn_label,
+            static_cast<int>(start_btn.x + (start_btn.width - btn_text_width) / 2.0f),
+            static_cast<int>(start_btn.y + (start_btn.height - btn_text_size) / 2.0f),
+            btn_text_size,
+            RAYWHITE
+        );
+
+        return;
+    }
+
+    // Gameplay
     Vector2 render_pos = Vector2Lerp(player.previous_position, player.position, alpha);     // Calculating interpolated frame here for the player to update the camera's target to this frame, so that the motion is smooth
     
     // The whole in game coordinate grid would always be 720px in height, the camera would scale according to it if the screen window

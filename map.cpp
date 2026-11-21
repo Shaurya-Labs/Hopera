@@ -5,9 +5,11 @@
 Map::Map() {
     map_texture_tile = LoadTexture("assets/graphics/map/map.png");
     npc_sprite_finding = LoadTexture("assets/graphics/npc/npc_finding.png");
-    npc_spritesheet_happy = LoadTexture("assets/graphics/npc/npc_happy.png");
+    npc_sprite_happy = LoadTexture("assets/graphics/npc/npc_happy.png");
     bike_sprite = LoadTexture("assets/graphics/obstacles/bike.png");
     trash_bin_sprite = LoadTexture("assets/graphics/obstacles/trash_bin.png");
+    bush_sprite = LoadTexture("assets/graphics/obstacles/bush.png");
+    bag_sprite = LoadTexture("assets/graphics/collectables/bag.png");
 
     normal_map_rect = { 0.0f, 0.0f, static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
     mirrored_map_rect = { 0.0f, 0.0f, -static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
@@ -49,18 +51,31 @@ void Map::unload() {
     // Unload all map textures
     UnloadTexture(map_texture_tile);
     UnloadTexture(npc_sprite_finding);
-    UnloadTexture(npc_spritesheet_happy);
+    UnloadTexture(npc_sprite_happy);
     UnloadTexture(bike_sprite);
     UnloadTexture(trash_bin_sprite);
+    UnloadTexture(bush_sprite);
+    UnloadTexture(bag_sprite);
 }
 
 void Map::check_and_resolve_collisions(Camera2D camera) {
-    // Checking for mouse interaction with the NPC
     Vector2 mouse_world = GetScreenToWorld2D(GetMousePosition(), camera);
-
+    
+    // Checking for mouse interaction with the NPC
     if (is_left_button_pressed && CheckCollisionPointRec(mouse_world, npc)) {
-        show_npc_start_dialogue = true;
 
+        if (!bag_captured) {
+            show_npc_start_dialogue = true;
+        }
+        else {
+            show_npc_game_won_dialogue = true;
+        }
+
+    }
+
+    // Checking for mouse interaction with the bag
+    if (!bag_captured && is_left_button_pressed && CheckCollisionPointRec(mouse_world, reward_bag)) {
+        bag_captured = true;
     }
 
 }
@@ -79,6 +94,15 @@ void Map::draw_static_elements() {
         else {
             subtitle_timer = 0;
             show_npc_start_dialogue = false;
+        }
+    }
+    else if (show_npc_game_won_dialogue) {
+        if (subtitle_timer <= 5) {
+            draw_subtitle("Old Man: Thankyou for finding my bag!");
+        }
+        else {
+            subtitle_timer = 0;
+            show_npc_game_won_dialogue = false;
         }
     }
 }
@@ -142,15 +166,20 @@ void Map::draw() {
     DrawTexturePro(map_texture_tile, normal_map_rect, Rectangle{ draw_width*3, 0.0f, draw_width, draw_height }, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
 
     // Draw the npc
-    float npc_draw_height = 55.0f;
+    Texture2D& npc_sprite_to_darw{ npc_sprite_finding };
+    float npc_draw_height { show_npc_game_won_dialogue ? 68.0f : 55.0f };
     float npc_scale = npc_draw_height / static_cast<float>(npc_sprite_finding.height);
     float npc_draw_width = static_cast<float>(npc_sprite_finding.width) * npc_scale;
+
+    if (show_npc_game_won_dialogue) {
+        npc_sprite_to_darw = npc_sprite_happy;
+    }
 
     Rectangle source {
         0.0f,
         0.0f,
-        static_cast<float>(npc_sprite_finding.width),
-        static_cast<float>(npc_sprite_finding.height)
+        static_cast<float>(npc_sprite_to_darw.width),
+        static_cast<float>(npc_sprite_to_darw.height)
     };
 
     Rectangle dest {
@@ -160,7 +189,8 @@ void Map::draw() {
         npc_draw_height
     };
 
-    DrawTexturePro(npc_sprite_finding, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    DrawTexturePro(npc_sprite_to_darw, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+
 
     // Draw obstacles
     for (const Rectangle& bike : bikes) {
@@ -169,6 +199,15 @@ void Map::draw() {
 
     for (const Rectangle& trash_bin : trash_bins) {
         draw_sprite(trash_bin_sprite, trash_bin, 46.0f);
+    }
+
+    for (const Rectangle& bush : bushes) {
+        draw_sprite(bush_sprite, bush, 56.0f);
+    }
+
+    // Draw the reward bag
+    if (!bag_captured) {
+        draw_sprite(bag_sprite, reward_bag, 40.0f);
     }
 
 }

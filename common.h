@@ -14,3 +14,9 @@ struct Wall {
     
     Color color{};        // For debugging only
 };
+
+enum class GameState {
+    START_SCREEN,
+    PLAYING,
+    GAME_OVER
+};

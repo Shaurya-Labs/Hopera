@@ -8,6 +8,7 @@ class Game {
         Player player{};
         Camera2D camera{};
         Map map{};
+        GameState game_state{ GameState::START_SCREEN };
         
         Game(bool debug);
         void init_player(float width, float height, Color color, int movement_speed);

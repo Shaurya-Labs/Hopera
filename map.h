@@ -18,6 +18,7 @@ class Map {
         Music bg_music{};
         Sound item_pickup{};
         Sound task_completed{};
+        bool show_npc_start_dialogue{ false };
         std::vector<Wall> walls {
             Wall { 60, 582, 5000, 582, BLUE },      // Bottom
             Wall { 60, 0, 60, 640, RED },       // Left
@@ -37,7 +38,6 @@ class Map {
     private:
         Rectangle normal_map_rect{};
         Rectangle mirrored_map_rect{};
-        bool show_npc_start_dialogue{ false };
         bool show_npc_game_won_dialogue{ false };
         float subtitle_timer{};
 

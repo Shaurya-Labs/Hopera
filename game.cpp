@@ -43,6 +43,10 @@ void Game::get_input() {
         player.is_touching_ground = false;
     }
 
+    if (IsKeyPressed(KEY_F11)) {
+        ToggleBorderlessWindowed();
+    }
+
     // For mouse
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         is_left_button_pressed = true;
@@ -108,6 +112,7 @@ void Game::update(float dt) {
         Vector2 mouse_pos = GetMousePosition();
         if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, start_btn)) {
             game_state = GameState::PLAYING;
+            map.show_npc_start_dialogue = true;
             PlayMusicStream(map.bg_music);
         }
 
@@ -166,7 +171,7 @@ void Game::draw(float alpha) {
         int screen_height = GetScreenHeight();
 
         const char* title = "HOPERA";
-        const char* prompt = "Help the old man retrieve his bag from the end of the map";
+        const char* prompt = "Help the elderly man retrieve his bag from the end of the map";
         const char* btn_label = "START";
 
         int title_size = 48;
@@ -212,7 +217,7 @@ void Game::draw(float alpha) {
         int minutes = static_cast<int>(map.timer) / 60;
         int seconds = static_cast<int>(map.timer) % 60;
 
-        const char* heading = "YOU FOUND THE BAG!";
+        const char* heading = "BAG RETURNED!";
         const char* score_text = TextFormat("Time Score: %02d:%02d", minutes, seconds);
         const char* btn_label = "PLAY AGAIN";
 

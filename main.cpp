@@ -62,9 +62,10 @@ int main() {
 
         game.draw(alpha);
 
-        DrawFPS(0, 0);
+        if (debug_mode) {
+            DrawFPS(0, 0);
+        }
         EndDrawing();
-
     }
 
     game.unload();      // Unloads all textures and audio

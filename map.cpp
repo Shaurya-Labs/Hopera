@@ -121,6 +121,7 @@ void Map::update_music_stream() {
 }
 
 void Map::draw_static_elements() {
+    // Draw the game timer
     int minutes = static_cast<int>(timer) / 60;
     int seconds = static_cast<int>(timer) % 60;
 
@@ -142,7 +143,7 @@ void Map::draw_static_elements() {
     // Darw the dialogues
     if (show_npc_start_dialogue) {
         if (subtitle_timer <= 5) {
-            draw_dialogues("Old Man: My bag is lost while walking down the street, please help me");
+            draw_dialogues("Elderly Man: I lost my bag down the street, could you help me find it?");
         }
         else {
             subtitle_timer = 0;
@@ -151,7 +152,7 @@ void Map::draw_static_elements() {
     }
     else if (show_npc_game_won_dialogue) {
         if (subtitle_timer <= 5) {
-            draw_dialogues("Old Man: Thankyou for finding my bag!");
+            draw_dialogues("Elderly Man: Thank you for finding my bag!");
         }
         else {
             subtitle_timer = 0;

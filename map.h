@@ -15,6 +15,9 @@ class Map {
         float timer{};
         bool timmer_running{ false };
         bool bag_captured{ false };
+        Music bg_music{};
+        Sound item_pickup{};
+        Sound task_completed{};
         std::vector<Wall> walls {
             Wall { 60, 582, 5000, 582, BLUE },      // Bottom
             Wall { 60, 0, 60, 640, RED },       // Left
@@ -27,6 +30,7 @@ class Map {
         void unload();      // Unloads all textures and audio
         void check_and_resolve_collisions(Camera2D camera);
         void update(float dt);
+        void update_music_stream();
         void draw();
         void draw_static_elements();        // Should be placed after EndMode2D() in game.cpp draw() function
         

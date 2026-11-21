@@ -3,6 +3,7 @@
 #include "common.h"
 
 Map::Map() {
+    // Load all map textures
     map_texture_tile = LoadTexture("assets/graphics/map/map.png");
     npc_sprite_finding = LoadTexture("assets/graphics/npc/npc_finding.png");
     npc_sprite_happy = LoadTexture("assets/graphics/npc/npc_happy.png");
@@ -10,6 +11,17 @@ Map::Map() {
     trash_bin_sprite = LoadTexture("assets/graphics/obstacles/trash_bin.png");
     bush_sprite = LoadTexture("assets/graphics/obstacles/bush.png");
     bag_sprite = LoadTexture("assets/graphics/collectables/bag.png");
+
+    // Load all map music and sounds
+    bg_music = LoadMusicStream("assets/audio/bg_music.mp3");
+    bg_music.looping = true;
+    SetMusicVolume(bg_music, 0.3f);
+
+    item_pickup = LoadSound("assets/audio/item_pick_up.mp3");
+    SetSoundVolume(item_pickup, 0.7f);
+
+    task_completed = LoadSound("assets/audio/task_completed.mp3");
+    SetSoundVolume(task_completed, 0.7f);
 
     normal_map_rect = { 0.0f, 0.0f, static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
     mirrored_map_rect = { 0.0f, 0.0f, -static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
@@ -56,6 +68,10 @@ void Map::unload() {
     UnloadTexture(trash_bin_sprite);
     UnloadTexture(bush_sprite);
     UnloadTexture(bag_sprite);
+
+    // Unload all map music and sounds
+    UnloadMusicStream(bg_music);
+    UnloadSound(item_pickup);
 }
 
 void Map::check_and_resolve_collisions(Camera2D camera) {
@@ -69,6 +85,7 @@ void Map::check_and_resolve_collisions(Camera2D camera) {
         }
         else {
             show_npc_game_won_dialogue = true;
+            PlaySound(task_completed);
         }
 
     }
@@ -76,6 +93,7 @@ void Map::check_and_resolve_collisions(Camera2D camera) {
     // Checking for mouse interaction with the bag
     if (!bag_captured && is_left_button_pressed && CheckCollisionPointRec(mouse_world, reward_bag)) {
         bag_captured = true;
+        PlaySound(item_pickup);
     }
 
 }
@@ -96,6 +114,10 @@ void Map::update(float dt) {
     if (timmer_running) {
         timer += dt;
     }
+}
+
+void Map::update_music_stream() {
+    UpdateMusicStream(bg_music);
 }
 
 void Map::draw_static_elements() {
@@ -135,6 +157,7 @@ void Map::draw_static_elements() {
             subtitle_timer = 0;
             show_npc_game_won_dialogue = false;
             game_state = GameState::GAME_OVER;
+            StopMusicStream(bg_music);
         }
     }
 }

@@ -15,11 +15,12 @@ int main() {
     SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     std::cout << "Config flags for raylib successfully initialized!" << std::endl;
 
-    std::cout << "Initializing the game window" << std::endl;
+    std::cout << "Initializing the game window and audio device" << std::endl;
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hopera");
-    std::cout << "Game window initialized successfully!" << std::endl;
+    InitAudioDevice();
+    std::cout << "Game window and audio device initialized successfully!" << std::endl;
 
-    Game game{true};
+    Game game{false};
     game.init_player(45, 70, BLUE, 500);
     game.player.position = Vector2{80, 500};
     game.player.previous_position = game.player.position;
@@ -42,8 +43,8 @@ int main() {
         last_update += dt;
         accumulator += dt;
 
-        // Checking for input once per frame, not once per tick, since that can cause some issues
-        game.get_input();
+        game.get_input();       // Checking for input once per frame, not once per tick, since that can cause some issues
+        game.update_music_stream();
 
         // This is the while loop which ticks the game, one iteration of this loop = one tick of the game
         while (accumulator >= tick_duration) {
@@ -68,5 +69,6 @@ int main() {
 
     game.unload();      // Unloads all textures and audio
     CloseWindow();
+    CloseAudioDevice();
     return 0;
 }

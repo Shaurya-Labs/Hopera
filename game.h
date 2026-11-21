@@ -14,6 +14,7 @@ class Game {
         void init_camera(Vector2 offset, Vector2 player_initial_position, float rotation, float zoom);
         void get_input();
         void update(float dt);
+        void update_music_stream();
         void draw(float alpha);
         void unload();      // Unload all textures and audio from all the objects
         

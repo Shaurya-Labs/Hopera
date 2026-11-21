@@ -11,6 +11,11 @@ Player::Player(float hitbox_width, float hitbox_height, Color color, int movemen
 
     player_spritesheet_run = LoadTexture("assets/graphics/player/Run.png");
     player_spritesheet_jump = LoadTexture("assets/graphics/player/Jump.png");
+    player_spritesheet_idle = LoadTexture("assets/graphics/player/Idle.png");
+
+    footsteps = LoadMusicStream("assets/audio/player_footsteps.mp3");
+    footsteps.looping = true;
+    SetMusicVolume(footsteps, 0.3f);
 
     cell_width = static_cast<float>(player_spritesheet_run.width) / 6.0f;
     cell_height = static_cast<float>(player_spritesheet_run.height);
@@ -20,6 +25,14 @@ void Player::unload() {
     // Unload all player textures
     UnloadTexture(player_spritesheet_run);
     UnloadTexture(player_spritesheet_jump);
+    UnloadTexture(player_spritesheet_idle);
+
+    // Unload all audio
+    UnloadMusicStream(footsteps);
+}
+
+void Player::update_music_stream() {
+    UpdateMusicStream(footsteps);
 }
 
 void Player::jump(float intensity) {
@@ -28,7 +41,11 @@ void Player::jump(float intensity) {
 
 void Player::draw(float alpha) {
     Vector2 render_position = Vector2Lerp(previous_position, position, alpha);
-    Texture2D& current_spritesheet = is_touching_ground ? player_spritesheet_run : player_spritesheet_jump;
+    Texture2D* current_spritesheet = is_touching_ground ? &player_spritesheet_run : &player_spritesheet_jump;
+
+    if (!is_player_trying_to_run) {
+        current_spritesheet = &player_spritesheet_idle;
+    }
 
     // The source rectangle window to slice up sprites from the sprite sheet
     Rectangle source {
@@ -45,7 +62,7 @@ void Player::draw(float alpha) {
         cell_height
     };
 
-    DrawTexturePro(current_spritesheet, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    DrawTexturePro(*current_spritesheet, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
     
     // Only for debug mode
     if (debug_mode) {
@@ -62,6 +79,16 @@ void Player::update_physics(float dt) {
     if (velocity.x != 0) {
         position.x += velocity.x * movement_speed * dt;
         facing_direction = (velocity.x > 0) ? 1 : -1;
+
+        if (is_touching_ground) {
+            PlayMusicStream(footsteps);
+        }
+        else {
+            PauseMusicStream(footsteps);
+        }
+    }
+    else {
+        PauseMusicStream(footsteps);
     }
 
     // Implementing gravity

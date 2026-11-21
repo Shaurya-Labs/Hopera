@@ -23,13 +23,16 @@ void Game::init_camera(Vector2 offset, Vector2 player_initial_position, float ro
 }
 
 void Game::get_input() {
+    is_player_trying_to_run = false;
 
     // For Keyboard
     if (IsKeyDown(KEY_A)) {
         player.velocity.x = -1;
+        is_player_trying_to_run = true;
     }
     else if (IsKeyDown(KEY_D)) {
         player.velocity.x = 1;
+        is_player_trying_to_run = true;
     }
     else {
         player.velocity.x = 0;
@@ -105,8 +108,38 @@ void Game::update(float dt) {
         Vector2 mouse_pos = GetMousePosition();
         if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, start_btn)) {
             game_state = GameState::PLAYING;
+            PlayMusicStream(map.bg_music);
         }
 
+        return;
+    }
+
+    // For game over screen
+    if (game_state == GameState::GAME_OVER) {
+        int screen_width = GetScreenWidth();
+        int screen_height = GetScreenHeight();
+
+        Rectangle play_again_btn {
+            static_cast<float>(screen_width) / 2.0f - 110.0f,
+            static_cast<float>(screen_height) / 2.0f + 70.0f,
+            220.0f,
+            56.0f
+        };
+
+        Vector2 mouse_pos = GetMousePosition();
+        if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, play_again_btn)) {
+            map.timer = 0.0f;
+            map.bag_captured = false;
+            map.timmer_running = false;
+            player.position = Vector2{ 80, 500 };
+            player.previous_position = player.position;
+            player.velocity = { 0.0f, 0.0f };
+            player.facing_direction = 1;
+            game_state = GameState::PLAYING;
+            PlayMusicStream(map.bg_music);
+        }
+
+        is_left_button_pressed = false;
         return;
     }
 
@@ -118,6 +151,11 @@ void Game::update(float dt) {
 
     // Resetting the flags after handling them
     is_left_button_pressed = false;     // Not inside get_input() function, since that function is polled once per frame, not once per tick, so the flag can be left unhandled
+}
+
+void Game::update_music_stream() {
+    player.update_music_stream();
+    map.update_music_stream();
 }
 
 void Game::draw(float alpha) {
@@ -193,21 +231,7 @@ void Game::draw(float alpha) {
             56.0f
         };
 
-        Vector2 mouse_pos = GetMousePosition();
-        bool hovered = CheckCollisionPointRec(mouse_pos, play_again_btn);
-
-        if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, play_again_btn)) {
-            map.timer = 0.0f;
-            map.bag_captured = false;
-            map.timmer_running = false;
-            player.position = Vector2{80, 500};
-            player.previous_position = player.position;
-            player.velocity = { 0.0f, 0.0f };
-            player.facing_direction = 1;
-            game_state = GameState::PLAYING;
-            is_left_button_pressed = false;
-            return;
-        }
+        bool hovered = CheckCollisionPointRec(GetMousePosition(), play_again_btn);
 
         DrawRectangle(0, 0, screen_width, screen_height, Color{ 14, 17, 26, 255 });
         DrawText(heading, (screen_width - heading_width) / 2, screen_height / 2 - 120, heading_size, RAYWHITE);
@@ -223,7 +247,6 @@ void Game::draw(float alpha) {
             RAYWHITE
         );
 
-        is_left_button_pressed = false;
         return;
     }
 

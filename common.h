@@ -20,3 +20,5 @@ enum class GameState {
     PLAYING,
     GAME_OVER
 };
+
+inline GameState game_state { GameState::START_SCREEN };

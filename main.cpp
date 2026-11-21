@@ -22,7 +22,7 @@ int main() {
     Game game{true};
     game.init_player(45, 70, BLUE, 500);
     game.player.position = Vector2{80, 500};
-    game.player.previous_position = Vector2{80, 500};
+    game.player.previous_position = game.player.position;
 
     game.init_camera(Vector2{GetScreenWidth()/2.0f, GetScreenHeight()/2.0f}, Vector2{80, 60}, 0.0f, 1.0f);
 

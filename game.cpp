@@ -92,21 +92,23 @@ void Game::update(float dt) {
 
     // For the initial start screen
     if (game_state == GameState::START_SCREEN) {
-            int screen_width = GetScreenWidth();
-            int screen_height = GetScreenHeight();
+        int screen_width = GetScreenWidth();
+        int screen_height = GetScreenHeight();
 
-            Rectangle start_btn {
-                static_cast<float>(screen_width) / 2.0f - 110.0f,
-                static_cast<float>(screen_height) / 2.0f + 50.0f,
-                220.0f,
-                56.0f
-            };
+        Rectangle start_btn {
+            static_cast<float>(screen_width) / 2.0f - 110.0f,
+            static_cast<float>(screen_height) / 2.0f + 50.0f,
+            220.0f,
+            56.0f
+        };
 
-            Vector2 mouse_pos = GetMousePosition();
-            if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, start_btn)) {
-                game_state = GameState::PLAYING;
-            }
+        Vector2 mouse_pos = GetMousePosition();
+        if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, start_btn)) {
+            game_state = GameState::PLAYING;
         }
+
+        return;
+    }
 
     player.update_physics(dt);
     check_and_resolve_collisions();
@@ -146,6 +148,8 @@ void Game::draw(float alpha) {
 
         bool hovered = CheckCollisionPointRec(GetMousePosition(), start_btn);
 
+        DrawRectangle(0, 0, screen_width, screen_height, Color{ 14, 17, 26, 255 });
+
         DrawText(title, (screen_width - title_width) / 2, screen_height / 2 - 120, title_size, RAYWHITE);
         DrawText(prompt, (screen_width - prompt_width) / 2, screen_height / 2 - 40, prompt_size, LIGHTGRAY);
 
@@ -159,6 +163,67 @@ void Game::draw(float alpha) {
             RAYWHITE
         );
 
+        return;
+    }
+
+    // For game over screen
+    if (game_state == GameState::GAME_OVER) {
+        int screen_width = GetScreenWidth();
+        int screen_height = GetScreenHeight();
+
+        int minutes = static_cast<int>(map.timer) / 60;
+        int seconds = static_cast<int>(map.timer) % 60;
+
+        const char* heading = "YOU FOUND THE BAG!";
+        const char* score_text = TextFormat("Time Score: %02d:%02d", minutes, seconds);
+        const char* btn_label = "PLAY AGAIN";
+
+        int heading_size = 46;
+        int score_size = 28;
+        int btn_text_size = 24;
+
+        int heading_width = MeasureText(heading, heading_size);
+        int score_width = MeasureText(score_text, score_size);
+        int btn_text_width = MeasureText(btn_label, btn_text_size);
+
+        Rectangle play_again_btn {
+            static_cast<float>(screen_width) / 2.0f - 110.0f,
+            static_cast<float>(screen_height) / 2.0f + 70.0f,
+            220.0f,
+            56.0f
+        };
+
+        Vector2 mouse_pos = GetMousePosition();
+        bool hovered = CheckCollisionPointRec(mouse_pos, play_again_btn);
+
+        if (is_left_button_pressed && CheckCollisionPointRec(mouse_pos, play_again_btn)) {
+            map.timer = 0.0f;
+            map.bag_captured = false;
+            map.timmer_running = false;
+            player.position = Vector2{80, 500};
+            player.previous_position = player.position;
+            player.velocity = { 0.0f, 0.0f };
+            player.facing_direction = 1;
+            game_state = GameState::PLAYING;
+            is_left_button_pressed = false;
+            return;
+        }
+
+        DrawRectangle(0, 0, screen_width, screen_height, Color{ 14, 17, 26, 255 });
+        DrawText(heading, (screen_width - heading_width) / 2, screen_height / 2 - 120, heading_size, RAYWHITE);
+        DrawText(score_text, (screen_width - score_width) / 2, screen_height / 2 - 30, score_size, GOLD);
+
+        DrawRectangleRec(play_again_btn, hovered ? SKYBLUE : DARKBLUE);
+        DrawRectangleLinesEx(play_again_btn, 2.0f, RAYWHITE);
+        DrawText(
+            btn_label,
+            static_cast<int>(play_again_btn.x + (play_again_btn.width - btn_text_width) / 2.0f),
+            static_cast<int>(play_again_btn.y + (play_again_btn.height - btn_text_size) / 2.0f),
+            btn_text_size,
+            RAYWHITE
+        );
+
+        is_left_button_pressed = false;
         return;
     }
 

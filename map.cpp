@@ -81,15 +81,46 @@ void Map::check_and_resolve_collisions(Camera2D camera) {
 }
 
 void Map::update(float dt) {
-    if (show_npc_start_dialogue) {
+    if (show_npc_start_dialogue || show_npc_game_won_dialogue) {
         subtitle_timer += dt;
+    }
+
+    if (show_npc_start_dialogue) {
+        timmer_running = true;
+    }
+
+    if (show_npc_game_won_dialogue) {
+        timmer_running = false;
+    }
+
+    if (timmer_running) {
+        timer += dt;
     }
 }
 
 void Map::draw_static_elements() {
+    int minutes = static_cast<int>(timer) / 60;
+    int seconds = static_cast<int>(timer) % 60;
+
+    const char* timer_text = TextFormat("%02d:%02d", minutes, seconds);
+    int font_size = 26;
+    int text_width = MeasureText(timer_text, font_size);
+    int pad_x = 18;
+    int pad_y = 8;
+
+    int box_w = text_width + pad_x * 2;
+    int box_h = font_size + pad_y * 2;
+    int box_x = (GetScreenWidth() - box_w) / 2;
+    int box_y = 16;
+
+    DrawRectangle(box_x, box_y, box_w, box_h, Fade(BLACK, 0.75f));
+    DrawRectangleLines(box_x, box_y, box_w, box_h, Fade(RAYWHITE, 0.25f));
+    DrawText(timer_text, box_x + pad_x, box_y + pad_y, font_size, RAYWHITE);
+
+    // Darw the dialogues
     if (show_npc_start_dialogue) {
         if (subtitle_timer <= 5) {
-            draw_subtitle("Old Man: My bag is lost while walking down the street, please help me");
+            draw_dialogues("Old Man: My bag is lost while walking down the street, please help me");
         }
         else {
             subtitle_timer = 0;
@@ -98,16 +129,17 @@ void Map::draw_static_elements() {
     }
     else if (show_npc_game_won_dialogue) {
         if (subtitle_timer <= 5) {
-            draw_subtitle("Old Man: Thankyou for finding my bag!");
+            draw_dialogues("Old Man: Thankyou for finding my bag!");
         }
         else {
             subtitle_timer = 0;
             show_npc_game_won_dialogue = false;
+            game_state = GameState::GAME_OVER;
         }
     }
 }
 
-void Map::draw_subtitle(const char* text, int font_size) {
+void Map::draw_dialogues(const char* text, int font_size) {
     int screen_width { GetScreenWidth() };
     int screen_height { GetScreenHeight() };
 
@@ -166,20 +198,16 @@ void Map::draw() {
     DrawTexturePro(map_texture_tile, normal_map_rect, Rectangle{ draw_width*3, 0.0f, draw_width, draw_height }, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
 
     // Draw the npc
-    Texture2D& npc_sprite_to_darw{ npc_sprite_finding };
+    Texture2D* npc_sprite_to_draw { show_npc_game_won_dialogue ? &npc_sprite_happy : &npc_sprite_finding };
     float npc_draw_height { show_npc_game_won_dialogue ? 68.0f : 55.0f };
     float npc_scale = npc_draw_height / static_cast<float>(npc_sprite_finding.height);
     float npc_draw_width = static_cast<float>(npc_sprite_finding.width) * npc_scale;
 
-    if (show_npc_game_won_dialogue) {
-        npc_sprite_to_darw = npc_sprite_happy;
-    }
-
     Rectangle source {
         0.0f,
         0.0f,
-        static_cast<float>(npc_sprite_to_darw.width),
-        static_cast<float>(npc_sprite_to_darw.height)
+        static_cast<float>(npc_sprite_to_draw->width),
+        static_cast<float>(npc_sprite_to_draw->height)
     };
 
     Rectangle dest {
@@ -189,7 +217,7 @@ void Map::draw() {
         npc_draw_height
     };
 
-    DrawTexturePro(npc_sprite_to_darw, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    DrawTexturePro(*npc_sprite_to_draw, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
 
 
     // Draw obstacles

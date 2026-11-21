@@ -1,8 +1,6 @@
 #pragma once
 #include <raylib.h>
 #include "player.h"
-#include <vector>
-#include "common.h"
 #include "map.h"
 
 class Game {
@@ -20,11 +18,5 @@ class Game {
         void unload();      // Unload all textures and audio from all the objects
         
     private:
-        std::vector<Wall> walls {
-            Wall { 60, 640, 5000, 640, BLUE },
-            Wall { 60, 0, 60, 640, RED },
-            Wall { 5000, 0, 5000, 640, GREEN }
-        };
-        
         void check_and_resolve_collisions();
 };

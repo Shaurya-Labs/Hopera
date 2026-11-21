@@ -1,19 +1,137 @@
 #include "map.h"
 #include <raylib.h>
+#include "common.h"
 
 Map::Map() {
     map_texture_tile = LoadTexture("assets/graphics/map/map.png");
+    npc_sprite_finding = LoadTexture("assets/graphics/npc/npc_finding.png");
+    npc_spritesheet_happy = LoadTexture("assets/graphics/npc/npc_happy.png");
+    bike_sprite = LoadTexture("assets/graphics/obstacles/bike.png");
+    trash_bin_sprite = LoadTexture("assets/graphics/obstacles/trash_bin.png");
 
     normal_map_rect = { 0.0f, 0.0f, static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
     mirrored_map_rect = { 0.0f, 0.0f, -static_cast<float>(map_texture_tile.width), static_cast<float>(map_texture_tile.height) };
+
+    for (const Rectangle& bike : bikes) {
+        int left = static_cast<int>(bike.x);
+        int top = static_cast<int>(bike.y);
+        int right = static_cast<int>(bike.x + bike.width);
+        int bottom = static_cast<int>(bike.y + bike.height);
+
+        // Top surface (horizontal platform to land/stand on)
+        walls.push_back(Wall { left, top, right, top, ORANGE });
+
+        // Left side (vertical wall)
+        walls.push_back(Wall { left, top, left, bottom, ORANGE });
+
+        // Right side (vertical wall)
+        walls.push_back(Wall { right, top, right, bottom, ORANGE });
+    }
+
+    for (const Rectangle& trash_bin : trash_bins) {
+        int left = static_cast<int>(trash_bin.x);
+        int top = static_cast<int>(trash_bin.y);
+        int right = static_cast<int>(trash_bin.x + trash_bin.width);
+        int bottom = static_cast<int>(trash_bin.y + trash_bin.height);
+
+        // Top surface (horizontal platform to land/stand on)
+        walls.push_back(Wall { left, top, right, top, ORANGE });
+
+        // Left side (vertical wall)
+        walls.push_back(Wall { left, top, left, bottom, ORANGE });
+
+        // Right side (vertical wall)
+        walls.push_back(Wall { right, top, right, bottom, ORANGE });
+    }
 }
 
 void Map::unload() {
     // Unload all map textures
     UnloadTexture(map_texture_tile);
+    UnloadTexture(npc_sprite_finding);
+    UnloadTexture(npc_spritesheet_happy);
+    UnloadTexture(bike_sprite);
+    UnloadTexture(trash_bin_sprite);
+}
+
+void Map::check_and_resolve_collisions(Camera2D camera) {
+    // Checking for mouse interaction with the NPC
+    Vector2 mouse_world = GetScreenToWorld2D(GetMousePosition(), camera);
+
+    if (is_left_button_pressed && CheckCollisionPointRec(mouse_world, npc)) {
+        show_npc_start_dialogue = true;
+
+    }
+
+}
+
+void Map::update(float dt) {
+    if (show_npc_start_dialogue) {
+        subtitle_timer += dt;
+    }
+}
+
+void Map::draw_static_elements() {
+    if (show_npc_start_dialogue) {
+        if (subtitle_timer <= 5) {
+            draw_subtitle("Old Man: My bag is lost while walking down the street, please help me");
+        }
+        else {
+            subtitle_timer = 0;
+            show_npc_start_dialogue = false;
+        }
+    }
+}
+
+void Map::draw_subtitle(const char* text, int font_size) {
+    int screen_width { GetScreenWidth() };
+    int screen_height { GetScreenHeight() };
+
+    int text_width { MeasureText(text, font_size) };
+    // Internal text padding for the box
+    int padding_x { 24 };
+    int padding_y { 12 };
+
+    int box_width { text_width + (padding_x * 2) };
+    int box_height { font_size + (padding_y * 2) };
+    int box_x { (screen_width - box_width) / 2 };
+    int box_y { screen_height - box_height - 48 };      // 48px above the bottom edge of the screen
+
+    DrawRectangle(box_x, box_y, box_width, box_height, Fade(BLACK, 0.78f));
+    DrawRectangleLines(box_x, box_y, box_width, box_height, Fade(RAYWHITE, 0.25f));
+
+    int text_x { box_x + padding_x };
+    int text_y { box_y + padding_y };
+
+    DrawText(text, text_x, text_y, font_size, RAYWHITE);
+
+}
+
+void Map::draw_sprite(const Texture2D& texture, const Rectangle& hitbox, float target_height, Color tint) {
+
+    float scale = target_height / static_cast<float>(texture.height);
+    float draw_width = static_cast<float>(texture.width) * scale;
+
+    Rectangle source {
+        0.0f,
+        0.0f,
+        static_cast<float>(texture.width),
+        static_cast<float>(texture.height)
+    };
+
+    Rectangle dest {
+        hitbox.x + (hitbox.width / 2.0f) - (draw_width / 2.0f),
+        hitbox.y + hitbox.height - target_height,
+        draw_width,
+        target_height
+    };
+
+    DrawTexturePro(texture, source, dest, Vector2{0.0f, 0.0f}, 0.0f, tint);
 }
 
 void Map::draw() {
+
+    // Draw the map
     float scale = 800.0f / static_cast<float>(map_texture_tile.height);
     float draw_width = static_cast<float>(map_texture_tile.width) * scale;
     float draw_height = 800.0f;
@@ -22,4 +140,35 @@ void Map::draw() {
     DrawTexturePro(map_texture_tile, normal_map_rect, Rectangle{ draw_width, 0.0f, draw_width, draw_height }, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
     DrawTexturePro(map_texture_tile, mirrored_map_rect, Rectangle{ draw_width*2, 0.0f, draw_width, draw_height }, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
     DrawTexturePro(map_texture_tile, normal_map_rect, Rectangle{ draw_width*3, 0.0f, draw_width, draw_height }, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+
+    // Draw the npc
+    float npc_draw_height = 55.0f;
+    float npc_scale = npc_draw_height / static_cast<float>(npc_sprite_finding.height);
+    float npc_draw_width = static_cast<float>(npc_sprite_finding.width) * npc_scale;
+
+    Rectangle source {
+        0.0f,
+        0.0f,
+        static_cast<float>(npc_sprite_finding.width),
+        static_cast<float>(npc_sprite_finding.height)
+    };
+
+    Rectangle dest {
+        npc.x + (npc.width / 2.0f) - (npc_draw_width / 2.0f),
+        npc.y + npc.height - npc_draw_height,
+        npc_draw_width,
+        npc_draw_height
+    };
+
+    DrawTexturePro(npc_sprite_finding, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+
+    // Draw obstacles
+    for (const Rectangle& bike : bikes) {
+        draw_sprite(bike_sprite, bike, 52.0f);
+    }
+
+    for (const Rectangle& trash_bin : trash_bins) {
+        draw_sprite(trash_bin_sprite, trash_bin, 46.0f);
+    }
+
 }

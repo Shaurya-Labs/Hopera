@@ -1,9 +1,10 @@
 #pragma once
 #include <raylib.h>
 
-inline bool debug_mode{ false };
+inline bool debug_mode { false };
+inline bool is_left_button_pressed { false };
 
-inline constexpr float ACCELERATION_DUE_TO_GRAVITY { 400.0f };
+inline constexpr float ACCELERATION_DUE_TO_GRAVITY { 500.0f };
 
 struct Wall {
     int start_pos_x{};

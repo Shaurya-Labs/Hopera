@@ -23,6 +23,8 @@ void Game::init_camera(Vector2 offset, Vector2 player_initial_position, float ro
 }
 
 void Game::get_input() {
+
+    // For Keyboard
     if (IsKeyDown(KEY_A)) {
         player.velocity.x = -1;
     }
@@ -34,8 +36,13 @@ void Game::get_input() {
     }
 
     if (IsKeyPressed(KEY_SPACE) && player.is_touching_ground) {
-        player.jump(350.0f);
+        player.jump(250.0f);
         player.is_touching_ground = false;
+    }
+
+    // For mouse
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        is_left_button_pressed = true;
     }
 }
 
@@ -44,7 +51,7 @@ void Game::check_and_resolve_collisions() {
     // Player's collision with the walls of the map
     player.is_touching_ground = false;          // Calculate this flag every single game tick
 
-    for (const Wall& wall : walls) {
+    for (const Wall& wall : map.walls) {
         bool is_horizontal = (wall.start_pos_y == wall.end_pos_y);
         bool is_vertical = (wall.start_pos_x == wall.end_pos_x);
 
@@ -63,15 +70,18 @@ void Game::check_and_resolve_collisions() {
 
         if (is_vertical) {
             // If the player collides with a wall on it's left
-            if ((player.velocity.x<0) && (player.position.x<=wall.start_pos_x) && (player.position.x+player.hitbox_width>=wall.start_pos_x)) {
+            if ((player.velocity.x<0) && (player.position.x<=wall.start_pos_x) && (player.position.x+player.hitbox_width>wall.start_pos_x) &&
+                (player.position.y+player.hitbox_height>wall.start_pos_y) && (player.position.y<wall.end_pos_y)) {
                 player.position.x = wall.start_pos_x;
+                player.velocity.x = 0;
             }
 
             // IF the player collides with a wall on it's right
-            if ((player.velocity.x>0) && (player.position.x+player.hitbox_width>=wall.start_pos_x) && (player.position.x<=wall.start_pos_x)) {
+            if ((player.velocity.x>0) && (player.position.x+player.hitbox_width>=wall.start_pos_x) && (player.position.x<wall.start_pos_x) &&
+                (player.position.y+player.hitbox_height>wall.start_pos_y) && (player.position.y<wall.end_pos_y)) {
                 player.position.x = wall.start_pos_x-player.hitbox_width;
+                player.velocity.x = 0;
             }
-
         }
 
     }
@@ -81,6 +91,12 @@ void Game::check_and_resolve_collisions() {
 void Game::update(float dt) {
     player.update_physics(dt);
     check_and_resolve_collisions();
+
+    map.update(dt);
+    map.check_and_resolve_collisions(camera);
+
+    // Resetting the flags after handling them
+    is_left_button_pressed = false;     // Not inside get_input() function, since that function is polled once per frame, not once per tick, so the flag can be left unhandled
 }
 
 void Game::draw(float alpha) {
@@ -107,6 +123,7 @@ void Game::draw(float alpha) {
         target_x = total_map_width / 2.0f; // Centers the map if the window is wider than the whole map
     }
 
+    // The coordinates which the camera would be following
     camera.target = {
         target_x,
         720/2
@@ -118,12 +135,24 @@ void Game::draw(float alpha) {
 
     // Only for debug mode
     if (debug_mode) {
-        for (const Wall& wall : walls) {
+        for (const Wall& wall : map.walls) {
             DrawLine(wall.start_pos_x, wall.start_pos_y, wall.end_pos_x, wall.end_pos_y, wall.color);
         }
+
+        Vector2 mouse_world = GetScreenToWorld2D(GetMousePosition(), camera);
+        int mouse_x = static_cast<int>(mouse_world.x);
+        int mouse_y = static_cast<int>(mouse_world.y);
+
+        // Small circle marker at the exact world point at the cursor
+        DrawCircleLines(mouse_x, mouse_y, 4.0f, RED);
+
+        // Text offset slightly so it doesn't sit right under the pointer
+        DrawText(TextFormat("X: %d, Y: %d", mouse_x, mouse_y), mouse_x + 12, mouse_y - 24, 20, BLACK);
     }
 
     EndMode2D();
+
+    map.draw_static_elements();
 }
 
 void Game::unload() {

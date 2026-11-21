@@ -2,7 +2,7 @@
 
 A 2D street parkour game built from scratch in C++ and Raylib for **Lean In Hacks 8.0** (Team **Creative Hackers**, Beginner's Track). 
 
-An elderly man loses his bag down a busy street, and you have to hop across parked bikes, trash bins, and bushes to reach the end of the road, grab the bag, and bring it back as fast as possible.
+An elderly man loses his bag down a busy street, and you have to hop across parked bikes and trash bins to reach the end of the road, grab the bag, and bring it back as fast as possible.
 
 > **Demo Video:** [Watch Gameplay on YouTube](https://youtu.be/h8KY7LKlBO8)
 

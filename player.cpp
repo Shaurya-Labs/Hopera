@@ -16,10 +16,11 @@ Player::Player(float hitbox_width, float hitbox_height, Color color, int movemen
     cell_height = static_cast<float>(player_spritesheet_run.height);
 }
 
-// Player::~Player() {
-//     UnloadTexture(player_spritesheet_run);
-//     UnloadTexture(player_spritesheet_jump);
-// }
+void Player::unload() {
+    // Unload all player textures
+    UnloadTexture(player_spritesheet_run);
+    UnloadTexture(player_spritesheet_jump);
+}
 
 void Player::jump(float intensity) {
     velocity.y -= intensity;
@@ -27,6 +28,7 @@ void Player::jump(float intensity) {
 
 void Player::draw(float alpha) {
     Vector2 render_position = Vector2Lerp(previous_position, position, alpha);
+    Texture2D& current_spritesheet = is_touching_ground ? player_spritesheet_run : player_spritesheet_jump;
 
     // The source rectangle window to slice up sprites from the sprite sheet
     Rectangle source {
@@ -43,7 +45,7 @@ void Player::draw(float alpha) {
         cell_height
     };
 
-    DrawTexturePro(player_spritesheet_run, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
+    DrawTexturePro(current_spritesheet, source, dest, Vector2{0.0f, 0.0f}, 0.0f, WHITE);
     
     // Only for debug mode
     if (debug_mode) {
@@ -59,26 +61,27 @@ void Player::update_physics(float dt) {
     // Update position of the player according to it's velocity
     if (velocity.x != 0) {
         position.x += velocity.x * movement_speed * dt;
-        
-        // For player's sprite animation calculations
-        animation_timer += dt;
-        if (animation_timer >= 0.09f) {
-            animation_timer -= 0.09f;
-            current_animation_frame = (current_animation_frame + 1) % 6;
-        }
-
-        facing_direction = velocity.x;
-    }
-
-    // For player's sprite animation calculations
-    else {
-        current_animation_frame = 0;
-        animation_timer = 0.0f;
+        facing_direction = (velocity.x > 0) ? 1 : -1;
     }
 
     // Implementing gravity
     if (!is_touching_ground) {
         velocity.y += ACCELERATION_DUE_TO_GRAVITY * dt;
         position.y += velocity.y * dt;
+    }
+
+    // For player's sprite animation calculations
+
+    if (!is_touching_ground || (velocity.x!=0)) {
+        animation_timer += dt;
+        if (animation_timer >= 0.09f) {
+            animation_timer -= 0.09f;
+            current_animation_frame = (current_animation_frame + 1) % 6;
+        }
+    }
+    
+    else {
+        current_animation_frame = 0;
+        animation_timer = 0.0f;
     }
 }

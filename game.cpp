@@ -3,6 +3,7 @@
 #include "player.h"
 #include "common.h"
 #include <raymath.h>
+#include "map.h"
 
 Game::Game(bool debug) {
     debug_mode = debug;
@@ -84,15 +85,35 @@ void Game::update(float dt) {
 
 void Game::draw(float alpha) {
     Vector2 render_pos = Vector2Lerp(player.previous_position, player.position, alpha);     // Calculating interpolated frame here for the player to update the camera's target to this frame, so that the motion is smooth
+    
+    // The whole in game coordinate grid would always be 720px in height, the camera would scale according to it if the screen window
+    // even after a window resize, the coordinate grid would be 720px only, the camera would just zoom in/out
+    // all the walls and player location would be fixed according to that 720px height grid
+    camera.zoom = static_cast<float>(GetScreenHeight()) / 720.0f;
+    camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };      // Calculating camera offset every frame so that it syncs with resizing of the window
+    
+    // Calculating the total world width of the 2 stitched tiles (mirrored + normal)
+    float map_scale = 800.0f / static_cast<float>(map.map_texture_tile.height);
+    float total_map_width = (static_cast<float>(map.map_texture_tile.width) * map_scale) * 4.0f;
+
+    // Calculating half of the screen's width in world units
+    float half_view_width = (GetScreenWidth() / 2.0f) / camera.zoom;
+
+    // Following the player, then clamp within (half_view_width, total_map_width - half_view_width)
+    float target_x = render_pos.x + player.hitbox_width / 2.0f;
+    if (total_map_width > half_view_width * 2.0f) {
+        target_x = Clamp(target_x, half_view_width, total_map_width - half_view_width);
+    } else {
+        target_x = total_map_width / 2.0f; // Centers the map if the window is wider than the whole map
+    }
 
     camera.target = {
-        render_pos.x + player.hitbox_width / 2.0f,
-        render_pos.y + player.hitbox_height / 2.0f
+        target_x,
+        720/2
     };
 
-    camera.offset = { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };      // Calculating camera offset every frame so that it syncs with resizing of the window
-
     BeginMode2D(camera);
+    map.draw();
     player.draw(alpha);
 
     // Only for debug mode
@@ -103,4 +124,9 @@ void Game::draw(float alpha) {
     }
 
     EndMode2D();
+}
+
+void Game::unload() {
+    player.unload();
+    map.unload();
 }

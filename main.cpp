@@ -16,7 +16,7 @@ int main() {
     std::cout << "Config flags for raylib successfully initialized!" << std::endl;
 
     std::cout << "Initializing the game window" << std::endl;
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Game");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Hopera");
     std::cout << "Game window initialized successfully!" << std::endl;
 
     Game game{true};
@@ -66,6 +66,7 @@ int main() {
 
     }
 
+    game.unload();      // Unloads all textures and audio
     CloseWindow();
     return 0;
 }

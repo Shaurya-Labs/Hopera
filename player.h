@@ -16,8 +16,8 @@ class Player {
         int facing_direction{ 1 };     // 1 is right, -1 is left
 
         Player(float hitbox_width, float hitbox_height, Color color, int movement_speed);
-        // ~Player();
         Player() = default;
+        void unload();
         void jump(float intensity);
         void update_physics(float dt);
         void draw(float alpha);
